@@ -1,0 +1,6 @@
+/home/technetium/Documents/Pitt/Weather_Station/Weather_Station/CMakeFiles/rebuild_cache.dir
+/home/technetium/Documents/Pitt/Weather_Station/Weather_Station/CMakeFiles/edit_cache.dir
+/home/technetium/Documents/Pitt/Weather_Station/Weather_Station/CMakeFiles/eeprom.dir
+/home/technetium/Documents/Pitt/Weather_Station/Weather_Station/CMakeFiles/hex.dir
+/home/technetium/Documents/Pitt/Weather_Station/Weather_Station/CMakeFiles/strip.dir
+/home/technetium/Documents/Pitt/Weather_Station/Weather_Station/CMakeFiles/weather_station.dir

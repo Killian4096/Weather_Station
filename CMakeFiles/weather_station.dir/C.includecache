@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/technetium/Documents/Pitt/Weather_Station/Weather_Station/src/weather_station.c
+avr/io.h
+-
+util/delay.h
+-
+USART.c
+-
+Timer.c
+-
+avr/interrupt.h
+-
+
+config/config.h
+
+include/Timer.c
+avr/io.h
+-
+stdint.h
+-
+config.h
+-
+
+include/USART.c
+avr/io.h
+-
+stdint.h
+-
+config.h
+-
+

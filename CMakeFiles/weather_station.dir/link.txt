@@ -1,1 +1,0 @@
-avr-gcc -mmcu=atmega328p CMakeFiles/weather_station.dir/src/weather_station.c.o -o weather_station.elf 

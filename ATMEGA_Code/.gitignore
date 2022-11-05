@@ -1,5 +1,5 @@
-*
+/*
 !.gitignore
-!src/
-!include/
-!config/
+!src
+!include
+!config

@@ -4,7 +4,7 @@
 #include <Timer.c>
 #include <avr/interrupt.h>
 
-#define TICKER 15 //Fire every min, interrupt ticks every 4 sec * 15 = 60 sec
+#define TICKER 0 //Fire every min, interrupt ticks every 4 sec * 15 = 60 sec
 
 static volatile uint32_t count = 0;
 

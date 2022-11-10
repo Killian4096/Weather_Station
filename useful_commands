@@ -1,0 +1,1 @@
+sudo avrdude -c usbtiny -p atmega328p -b19200 -v -U flash:w:NAME_OF_FILE

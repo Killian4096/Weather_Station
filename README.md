@@ -6,10 +6,11 @@ A board that is able to transmite Temperature Data using an ASK to be read using
 
 ## Contents
 
-Atmega_Temperature_Sensor: Arduino Code
-Resources: BOM and Presentation
-Station_Monitor: Software to be run on computer
+Atmega_Temperature_Sensor: Arduino Code\
+Resources: BOM and Presentation\
+Station_Monitor: Software to be run on computer\
 Weather_Station_PCB: PCB Design
+
 
 
 ## Acknowledgements

@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 # GNU Radio Python Flow Graph
-# Title: UART_Receiver
+# Title: Not titled yet
 # GNU Radio version: 3.8.2.0
 
 from distutils.version import StrictVersion
@@ -20,26 +20,31 @@ if __name__ == '__main__':
         except:
             print("Warning: failed to XInitThreads()")
 
-from gnuradio import blocks
-import pmt
-from gnuradio import gr
+from PyQt5 import Qt
+from gnuradio import qtgui
 from gnuradio.filter import firdes
+import sip
+from gnuradio import analog
+from gnuradio import blocks
+from gnuradio import filter
+from gnuradio import gr
 import sys
 import signal
-from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
-from gnuradio.qtgui import Range, RangeWidget
+from gnuradio import zeromq
+import osmosdr
+import time
 
 from gnuradio import qtgui
 
 class UART_Receiver(gr.top_block, Qt.QWidget):
 
     def __init__(self):
-        gr.top_block.__init__(self, "UART_Receiver")
+        gr.top_block.__init__(self, "Not titled yet")
         Qt.QWidget.__init__(self)
-        self.setWindowTitle("UART_Receiver")
+        self.setWindowTitle("Not titled yet")
         qtgui.util.check_set_qss()
         try:
             self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
@@ -70,26 +75,106 @@ class UART_Receiver(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 32000
-        self.center_frequency = center_frequency = 434e6
+        self.xlate_freq = xlate_freq = -55e3
+        self.threshold = threshold = 0.1
+        self.samp_rate = samp_rate = 2.048e6
+        self.rf_gain = rf_gain = 20
+        self.lp_trans_width = lp_trans_width = 10e3
+        self.lp_gain = lp_gain = 10
+        self.lp_cutoff_freq = lp_cutoff_freq = 100e3
+        self.decimation = decimation = 64
+        self.center_freq = center_freq = 434e6
 
         ##################################################
         # Blocks
         ##################################################
-        self._center_frequency_range = Range(420e6, 440e6, 0.5e6, 434e6, 200)
-        self._center_frequency_win = RangeWidget(self._center_frequency_range, self.set_center_frequency, 'center_frequency', "counter_slider", float)
-        self.top_grid_layout.addWidget(self._center_frequency_win)
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_char*1, '/dev/pts/1', False, 0, 0)
-        self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/dev/pts/3', False)
-        self.blocks_file_sink_0.set_unbuffered(False)
+        self.zeromq_pub_sink_0 = zeromq.pub_sink(gr.sizeof_int, 1, 'tcp://127.0.0.1:3000', 100, False, -1)
+        self.rtlsdr_source_0 = osmosdr.source(
+            args="numchan=" + str(1) + " " + ""
+        )
+        self.rtlsdr_source_0.set_time_unknown_pps(osmosdr.time_spec_t())
+        self.rtlsdr_source_0.set_sample_rate(samp_rate)
+        self.rtlsdr_source_0.set_center_freq(center_freq, 0)
+        self.rtlsdr_source_0.set_freq_corr(0, 0)
+        self.rtlsdr_source_0.set_dc_offset_mode(0, 0)
+        self.rtlsdr_source_0.set_iq_balance_mode(0, 0)
+        self.rtlsdr_source_0.set_gain_mode(False, 0)
+        self.rtlsdr_source_0.set_gain(rf_gain, 0)
+        self.rtlsdr_source_0.set_if_gain(20, 0)
+        self.rtlsdr_source_0.set_bb_gain(20, 0)
+        self.rtlsdr_source_0.set_antenna('', 0)
+        self.rtlsdr_source_0.set_bandwidth(0, 0)
+        self.qtgui_freq_sink_x_0 = qtgui.freq_sink_c(
+            1024, #size
+            firdes.WIN_RECTANGULAR, #wintype
+            0, #fc
+            samp_rate / decimation, #bw
+            'Xlated, Filtered and Decimated', #name
+            1
+        )
+        self.qtgui_freq_sink_x_0.set_update_time(0.10)
+        self.qtgui_freq_sink_x_0.set_y_axis(-140, 10)
+        self.qtgui_freq_sink_x_0.set_y_label('Relative Gain', 'dB')
+        self.qtgui_freq_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, 0.0, 0, "")
+        self.qtgui_freq_sink_x_0.enable_autoscale(False)
+        self.qtgui_freq_sink_x_0.enable_grid(False)
+        self.qtgui_freq_sink_x_0.set_fft_average(1.0)
+        self.qtgui_freq_sink_x_0.enable_axis_labels(False)
+        self.qtgui_freq_sink_x_0.enable_control_panel(True)
+
+        self.qtgui_freq_sink_x_0.disable_legend()
+
+
+        labels = ['Raw', 'Xlated and FIltered', '', '', '',
+            '', '', '', '', '']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ["dark green", "red", "green", "black", "cyan",
+            "magenta", "yellow", "dark red", "dark green", "dark blue"]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+
+        for i in range(1):
+            if len(labels[i]) == 0:
+                self.qtgui_freq_sink_x_0.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_freq_sink_x_0.set_line_label(i, labels[i])
+            self.qtgui_freq_sink_x_0.set_line_width(i, widths[i])
+            self.qtgui_freq_sink_x_0.set_line_color(i, colors[i])
+            self.qtgui_freq_sink_x_0.set_line_alpha(i, alphas[i])
+
+        self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.pyqwidget(), Qt.QWidget)
+        self.top_grid_layout.addWidget(self._qtgui_freq_sink_x_0_win)
+        self.low_pass_filter_0 = filter.fir_filter_ccf(
+            decimation,
+            firdes.low_pass(
+                lp_gain,
+                samp_rate,
+                lp_cutoff_freq,
+                lp_trans_width,
+                firdes.WIN_HAMMING,
+                6.76))
+        self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_ccc(1, [1], xlate_freq, samp_rate)
+        self.blocks_threshold_ff_0 = blocks.threshold_ff(threshold, threshold, 0)
+        self.blocks_max_xx_0 = blocks.max_ff(1, 1)
+        self.blocks_float_to_int_0 = blocks.float_to_int(1, 1)
+        self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(1)
+        self.analog_const_source_x_0 = analog.sig_source_f(0, analog.GR_CONST_WAVE, 0, 0, 0)
 
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_file_source_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.analog_const_source_x_0, 0), (self.blocks_max_xx_0, 0))
+        self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.blocks_threshold_ff_0, 0))
+        self.connect((self.blocks_float_to_int_0, 0), (self.zeromq_pub_sink_0, 0))
+        self.connect((self.blocks_max_xx_0, 0), (self.blocks_float_to_int_0, 0))
+        self.connect((self.blocks_threshold_ff_0, 0), (self.blocks_max_xx_0, 1))
+        self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.low_pass_filter_0, 0))
+        self.connect((self.low_pass_filter_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
+        self.connect((self.low_pass_filter_0, 0), (self.qtgui_freq_sink_x_0, 0))
+        self.connect((self.rtlsdr_source_0, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
 
 
     def closeEvent(self, event):
@@ -97,17 +182,71 @@ class UART_Receiver(gr.top_block, Qt.QWidget):
         self.settings.setValue("geometry", self.saveGeometry())
         event.accept()
 
+    def get_xlate_freq(self):
+        return self.xlate_freq
+
+    def set_xlate_freq(self, xlate_freq):
+        self.xlate_freq = xlate_freq
+        self.freq_xlating_fir_filter_xxx_0.set_center_freq(self.xlate_freq)
+
+    def get_threshold(self):
+        return self.threshold
+
+    def set_threshold(self, threshold):
+        self.threshold = threshold
+        self.blocks_threshold_ff_0.set_hi(self.threshold)
+        self.blocks_threshold_ff_0.set_lo(self.threshold)
+
     def get_samp_rate(self):
         return self.samp_rate
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
+        self.low_pass_filter_0.set_taps(firdes.low_pass(self.lp_gain, self.samp_rate, self.lp_cutoff_freq, self.lp_trans_width, firdes.WIN_HAMMING, 6.76))
+        self.qtgui_freq_sink_x_0.set_frequency_range(0, self.samp_rate / self.decimation)
+        self.rtlsdr_source_0.set_sample_rate(self.samp_rate)
 
-    def get_center_frequency(self):
-        return self.center_frequency
+    def get_rf_gain(self):
+        return self.rf_gain
 
-    def set_center_frequency(self, center_frequency):
-        self.center_frequency = center_frequency
+    def set_rf_gain(self, rf_gain):
+        self.rf_gain = rf_gain
+        self.rtlsdr_source_0.set_gain(self.rf_gain, 0)
+
+    def get_lp_trans_width(self):
+        return self.lp_trans_width
+
+    def set_lp_trans_width(self, lp_trans_width):
+        self.lp_trans_width = lp_trans_width
+        self.low_pass_filter_0.set_taps(firdes.low_pass(self.lp_gain, self.samp_rate, self.lp_cutoff_freq, self.lp_trans_width, firdes.WIN_HAMMING, 6.76))
+
+    def get_lp_gain(self):
+        return self.lp_gain
+
+    def set_lp_gain(self, lp_gain):
+        self.lp_gain = lp_gain
+        self.low_pass_filter_0.set_taps(firdes.low_pass(self.lp_gain, self.samp_rate, self.lp_cutoff_freq, self.lp_trans_width, firdes.WIN_HAMMING, 6.76))
+
+    def get_lp_cutoff_freq(self):
+        return self.lp_cutoff_freq
+
+    def set_lp_cutoff_freq(self, lp_cutoff_freq):
+        self.lp_cutoff_freq = lp_cutoff_freq
+        self.low_pass_filter_0.set_taps(firdes.low_pass(self.lp_gain, self.samp_rate, self.lp_cutoff_freq, self.lp_trans_width, firdes.WIN_HAMMING, 6.76))
+
+    def get_decimation(self):
+        return self.decimation
+
+    def set_decimation(self, decimation):
+        self.decimation = decimation
+        self.qtgui_freq_sink_x_0.set_frequency_range(0, self.samp_rate / self.decimation)
+
+    def get_center_freq(self):
+        return self.center_freq
+
+    def set_center_freq(self, center_freq):
+        self.center_freq = center_freq
+        self.rtlsdr_source_0.set_center_freq(self.center_freq, 0)
 
 
 
